@@ -20,6 +20,8 @@ def dfs(matrix, startX,startY):
         nowX,nowY = stack.pop()
 
         #visit check
+        path.insert(0,(nowX,nowY))
+        scoreHistory += matrix[nowX][nowY]
         if nowX == 0 and nowY == 0:
             pathList.append(path)
             scoreList.append(scoreHistory)
@@ -27,9 +29,6 @@ def dfs(matrix, startX,startY):
                 path = pathStack.pop()
                 scoreHistory = scoreStack.pop()
             continue
-        else:
-            path.insert(0,(nowX,nowY))
-            scoreHistory += matrix[nowX][nowY]
 
         #search
         #path.append((nowX,nowY))
@@ -74,13 +73,13 @@ def wordLevenshteinDistance(wordA,wordB,korean):
         wordB = g2p(wordB)
         wordA = j2hcj(h2j(wordA))
         wordB = j2hcj(h2j(wordB))
-        levDistance = lev()
+        levDistance = lev(wordA,wordB)
     else:
         levDistance = lev(wordA,wordB)
 
     return levDistance
 
-def optimalWordStringAlignment(strB,strA,korean):
+def optimalWordStringAlignment(strB,strA,korean=False,subPenaltyWeight=1):
 
     scoreMatrix = list()
     lengthA = len(strA) 
@@ -106,9 +105,11 @@ def optimalWordStringAlignment(strB,strA,korean):
     for i in range(1,lengthA+1):
         for j in range(1,lengthB+1):
             scoreMatrix[i][j] = min([
-                scoreMatrix[i-1][j-1] + wordLevenshteinDistance(strA[i-1],strB[j-1],korean),               # substitution
-                scoreMatrix[i-1][j] + wordLevenshteinDistance(strA[i-1],"",korean) +  (i-1)*gapPenalty,    # deletion
-                scoreMatrix[i][j-1] + wordLevenshteinDistance("",strB[j-1],korean) + (j-1)*gapPenalty      # insertion
+                scoreMatrix[i-1][j-1] + subPenaltyWeight*wordLevenshteinDistance(strA[i-1],strB[j-1],korean),               # substitution
+                scoreMatrix[i-1][j] + i*len(strA[i-1]),    # deletion
+                scoreMatrix[i][j-1] + j*len(strB[j-1])      # insertion
+                #scoreMatrix[i-1][j] + wordLevenshteinDistance(strA[i-1],"",korean) +  (i-1)*gapPenalty,    # deletion
+                #scoreMatrix[i][j-1] + wordLevenshteinDistance("",strB[j-1],korean) + (j-1)*gapPenalty      # insertion
             ])
     
     # Tracback
@@ -118,23 +119,24 @@ def optimalWordStringAlignment(strB,strA,korean):
     # matching
     newA=list()
     newB=list()
-    for i in range(len(minPath)):
+    for i in range(len(minPath)-1):
         newA.append('-')
         newB.append('-')
     i=0
     j=0
-    for k in range(len(minPath)):
+    for k in range(1,len(minPath)):
         if minPath[k][0] == minPath[k-1][0]:
-            newA[k] = "-"#.append('-')
+            newA[k-1] = "-"#.append('-')
         else:
-            newA[k] = strA[i]
+            newA[k-1] = strA[i]
             i+=1
         if minPath[k][1] == minPath[k-1][1]:
-            newB[k] = strB[j]
+            newB[k-1] = strB[j]
             j+=1
         else:
-            newB[k] = strB[j]
+            newB[k-1] = strB[j]
             j=j+1
+
     wordPairs = list()
     for i,j in zip(newA,newB):
         wordPairs.append((i,j))
@@ -148,6 +150,7 @@ def main(args):
     strA = args.strA.split()
     strB = args.strB.split()
     korean = args.korean
+    subPenaltyWeight = args.subPenaltyWeight
     paris = optimalWordStringAlignment(strA,strB,korean)
     print(paris)
 
@@ -155,6 +158,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="word lavel string alignment\n --strA '' --strB ''")
     parser.add_argument("--strA",default="s a t u r d a y c b d",type=str)
     parser.add_argument("--strB",default="s u n d a y a b",type=str)
+    parser.add_argument("--subPenaltyWeight",default=1,type=int)
     parser.add_argument("--korean",default=0,type=int)
 
     args = parser.parse_args()
