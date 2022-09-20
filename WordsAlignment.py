@@ -105,6 +105,7 @@ def optimalWordStringAlignment(strB,strA):
         scoreMatrix[0][i] = wordLevenshteinDistance("",strB[0]) + i
 
     # scoring
+    # base on Smith-Waterman algorithm
     gapPenalty = 0
     for i in range(1,lengthA+1):
         for j in range(1,lengthB+1):
