@@ -20,5 +20,5 @@ g2pk
 
 ## Reference
 
-[1] https://en.wikipedia.org/wiki/Smith%E2%80%93Waterman_algorithm 
+[1] https://en.wikipedia.org/wiki/Smith%E2%80%93Waterman_algorithm  
 [2] CSE 589 Applied algorithms https://courses.cs.washington.edu/courses/csep521/99sp/lectures/lecture18/sld001.htm
