@@ -1,26 +1,86 @@
 import jamo
-#import Levenshtein
 from Levenshtein import distance as lev
 
+import copy
 import argparse
 
 
 korean = False
 noPredictionToken = "null"
 
+def dfs(matrix, startX,startY):
+    stack = list()
+    scoreStack = list()
+    scoreList = list()
+    pathStack = list()
+    stack.append((startX,startY))
+    pathList = list()
+    path = list()
+    scoreHistory = 0
+    while True:
+        if len(stack) == 0:
+            break
+
+        #visit
+        nowX,nowY = stack.pop()
+
+        #visit check
+        if nowX == 0 and nowY == 0:
+            pathList.append(path)
+            scoreList.append(scoreHistory)
+            if len(pathStack) > 0:
+                path = pathStack.pop()
+                scoreHistory = scoreStack.pop()
+            continue
+        else:
+            path.insert(0,(nowX,nowY))
+            scoreHistory += matrix[nowX][nowY]
+
+        #search
+        #path.append((nowX,nowY))
+        tempScoreList = list()   # del, in, sub
+        if nowY > 0:
+            tempScoreList.append(matrix[nowX][nowY-1]) # del
+        if nowX > 0:
+            tempScoreList.append(matrix[nowX-1][nowY]) # in
+        if nowX > 0 and nowY > 0:
+            tempScoreList.append(matrix[nowX-1][nowY-1]) # sub
+
+        minScore = min(tempScoreList)
+
+        temp = list()
+        if tempScoreList[0] == minScore:
+            temp.append((nowX,nowY-1))
+        if tempScoreList[1] == minScore:
+            temp.append((nowX-1,nowY))
+        if tempScoreList[2] == minScore:
+            temp.append((nowX-1,nowY-1))
+        
+        if len(temp)>1:         # if branch, stacking path
+            for i in temp:
+                stack.append(i)
+                pathStack.append(copy.deepcopy(path))
+                scoreStack.append(copy.deepcopy(scoreHistory))
+        else:
+            stack.append(temp.pop())
+
+    return pathList,scoreList
+
 def wordLevenshteinDistance(wordA,wordB):
     
     if wordA == wordB:
-        return -1
+        value = -2#-(len(wordA))
+        return value
 
     if korean:
         pass
+        #levDistance = lev()
     else:
         levDistance = lev(wordA,wordB)
 
     return levDistance
 
-def optimalWordStringAlignment(strA,strB):
+def optimalWordStringAlignment(strB,strA):
 
     scoreMatrix = list()
     lengthA = len(strA) 
@@ -41,29 +101,44 @@ def optimalWordStringAlignment(strA,strB):
         scoreMatrix[0][i] = wordLevenshteinDistance("",strB[0]) + i
 
     # scoring
-    gapPenalty = 3
+    gapPenalty = 0
     for i in range(1,lengthA+1):
         for j in range(1,lengthB+1):
             scoreMatrix[i][j] = min([
-                scoreMatrix[i-1][j-1] + wordLevenshteinDistance(strA[i-1],strB[j-1]),
-                scoreMatrix[i-1][j] + wordLevenshteinDistance(strA[i-1],"") +  (i-1)*gapPenalty,
-                scoreMatrix[i][j-1] + wordLevenshteinDistance("",strB[j-1]) + (j-1)*gapPenalty
+                scoreMatrix[i-1][j-1] + wordLevenshteinDistance(strA[i-1],strB[j-1]),               # substitution
+                scoreMatrix[i-1][j] + wordLevenshteinDistance(strA[i-1],"") +  (i-1)*gapPenalty,    # deletion
+                scoreMatrix[i][j-1] + wordLevenshteinDistance("",strB[j-1]) + (j-1)*gapPenalty      # insertion
             ])
-
-    for i in range(lengthA+1):
-        print(i,j,scoreMatrix[i])
+    
     # Tracback
-    mathcingPath = list()
+    matchingPaths,matchingScore = dfs(scoreMatrix,lengthA,lengthB)
+    minPath = matchingPaths[matchingScore.index(min(matchingScore))]
 
     # matching
-    i=1
-    j=1
     newA=list()
     newB=list()
-    #for k in range(1,):
-    #    if matchingPath[k]
+    for i in range(len(minPath)):
+        newA.append('-')
+        newB.append('-')
+    i=0
+    j=0
+    for k in range(len(minPath)):
+        if minPath[k][0] == minPath[k-1][0]:
+            newA[k] = "-"#.append('-')
+        else:
+            newA[k] = strA[i]
+            i+=1
+        if minPath[k][1] == minPath[k-1][1]:
+            newB[k] = strB[j]
+            j+=1
+        else:
+            newB[k] = strB[j]
+            j=j+1
 
-    #return (newA,newB)
+    print(newB)
+    print(newA)
+
+    return (newA,newB)
 
 
 
@@ -71,15 +146,14 @@ def main(args):
 
     strA = args.strA.split()
     strB = args.strB.split()
+    print(strA,strB)
     paris = optimalWordStringAlignment(strA,strB)
     
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="word lavel string alignment")
-    #parser.add_argument("--strA",default="hello world bro a",type=str)
-    #parser.add_argument("--strB",default="hello my friend a",type=str)
-    parser.add_argument("--strA",default="a c b d",type=str)
-    parser.add_argument("--strB",default="a c d",type=str)
+    parser = argparse.ArgumentParser(description="word lavel string alignment\n --strA '' --strB ''")
+    parser.add_argument("--strA",default="s a t u r d a y c b d",type=str)
+    parser.add_argument("--strB",default="s u n d a y a b c",type=str)
 
     args = parser.parse_args()
     main(args)
