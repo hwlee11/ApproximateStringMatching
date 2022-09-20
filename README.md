@@ -14,9 +14,9 @@ hwl@ai.korea.ac.kr
 
 ## Requirements
 
-python-levenshtein
-jamo
-g2pk
+python-levenshtein  
+jamo  
+g2pk  
 
 ## Reference
 
