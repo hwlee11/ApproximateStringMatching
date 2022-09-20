@@ -1,4 +1,3 @@
-import jamo
 from Levenshtein import distance as lev
 
 import copy
@@ -69,12 +68,17 @@ def dfs(matrix, startX,startY):
 def wordLevenshteinDistance(wordA,wordB):
     
     if wordA == wordB:
-        value = -2#-(len(wordA))
+        value = -(len(wordA))
         return value
 
     if korean:
-        pass
-        #levDistance = lev()
+        from jamo import h2j,j2hcj
+        from g2pk import G2p
+        wordA = g2p(wordA)
+        wordB = g2p(wordB)
+        wordA = j2hcj(h2j(wordA))
+        wordB = j2hcj(h2j(wordB))
+        levDistance = lev()
     else:
         levDistance = lev(wordA,wordB)
 
@@ -134,11 +138,11 @@ def optimalWordStringAlignment(strB,strA):
         else:
             newB[k] = strB[j]
             j=j+1
+    wordPairs = list
+    for i,j in zip(newA,newB):
+        wordParis.append((i,j))
 
-    print(newB)
-    print(newA)
-
-    return (newA,newB)
+    return wordPairs
 
 
 
@@ -146,14 +150,14 @@ def main(args):
 
     strA = args.strA.split()
     strB = args.strB.split()
-    print(strA,strB)
     paris = optimalWordStringAlignment(strA,strB)
     
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="word lavel string alignment\n --strA '' --strB ''")
     parser.add_argument("--strA",default="s a t u r d a y c b d",type=str)
-    parser.add_argument("--strB",default="s u n d a y a b c",type=str)
+    parser.add_argument("--strB",default="s u n d a y a b",type=str)
+    parser.add_argument("--korean",default=False,type=bool)
 
     args = parser.parse_args()
     main(args)
