@@ -3,10 +3,6 @@ from Levenshtein import distance as lev
 import copy
 import argparse
 
-
-korean = False
-noPredictionToken = "null"
-
 def dfs(matrix, startX,startY):
     stack = list()
     scoreStack = list()
@@ -65,7 +61,7 @@ def dfs(matrix, startX,startY):
 
     return pathList,scoreList
 
-def wordLevenshteinDistance(wordA,wordB):
+def wordLevenshteinDistance(wordA,wordB,korean):
     
     if wordA == wordB:
         value = -(len(wordA))
@@ -84,7 +80,7 @@ def wordLevenshteinDistance(wordA,wordB):
 
     return levDistance
 
-def optimalWordStringAlignment(strB,strA):
+def optimalWordStringAlignment(strB,strA,korean):
 
     scoreMatrix = list()
     lengthA = len(strA) 
@@ -100,9 +96,9 @@ def optimalWordStringAlignment(strB,strA):
 
     # init matrix
     for i in range(lengthA+1):
-        scoreMatrix[i][0] = wordLevenshteinDistance(strA[0],"") + i
+        scoreMatrix[i][0] = wordLevenshteinDistance(strA[0],"",korean) + i
     for i in range(lengthB+1):
-        scoreMatrix[0][i] = wordLevenshteinDistance("",strB[0]) + i
+        scoreMatrix[0][i] = wordLevenshteinDistance("",strB[0],korean) + i
 
     # scoring
     # base on Smith-Waterman algorithm
@@ -110,9 +106,9 @@ def optimalWordStringAlignment(strB,strA):
     for i in range(1,lengthA+1):
         for j in range(1,lengthB+1):
             scoreMatrix[i][j] = min([
-                scoreMatrix[i-1][j-1] + wordLevenshteinDistance(strA[i-1],strB[j-1]),               # substitution
-                scoreMatrix[i-1][j] + wordLevenshteinDistance(strA[i-1],"") +  (i-1)*gapPenalty,    # deletion
-                scoreMatrix[i][j-1] + wordLevenshteinDistance("",strB[j-1]) + (j-1)*gapPenalty      # insertion
+                scoreMatrix[i-1][j-1] + wordLevenshteinDistance(strA[i-1],strB[j-1],korean),               # substitution
+                scoreMatrix[i-1][j] + wordLevenshteinDistance(strA[i-1],"",korean) +  (i-1)*gapPenalty,    # deletion
+                scoreMatrix[i][j-1] + wordLevenshteinDistance("",strB[j-1],korean) + (j-1)*gapPenalty      # insertion
             ])
     
     # Tracback
@@ -139,9 +135,9 @@ def optimalWordStringAlignment(strB,strA):
         else:
             newB[k] = strB[j]
             j=j+1
-    wordPairs = list
+    wordPairs = list()
     for i,j in zip(newA,newB):
-        wordParis.append((i,j))
+        wordPairs.append((i,j))
 
     return wordPairs
 
@@ -151,14 +147,15 @@ def main(args):
 
     strA = args.strA.split()
     strB = args.strB.split()
-    paris = optimalWordStringAlignment(strA,strB)
-    
+    korean = args.korean
+    paris = optimalWordStringAlignment(strA,strB,korean)
+    print(paris)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="word lavel string alignment\n --strA '' --strB ''")
     parser.add_argument("--strA",default="s a t u r d a y c b d",type=str)
     parser.add_argument("--strB",default="s u n d a y a b",type=str)
-    parser.add_argument("--korean",default=False,type=bool)
+    parser.add_argument("--korean",default=0,type=int)
 
     args = parser.parse_args()
     main(args)
